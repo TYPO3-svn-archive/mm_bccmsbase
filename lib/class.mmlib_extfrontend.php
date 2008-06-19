@@ -162,7 +162,8 @@ class mmlib_extfrontend extends tslib_pibase
     	// Configure caching - experimental...
 		$this->mmlib_cache = t3lib_div::makeInstance("mmlib_cache");
 		$this->allowCaching = $this->conf["allowCaching"] ? 1 : 0;
-		if (!$this->allowCaching) $GLOBALS["TSFE"]->set_no_cache();
+		//t3lib_div::debug($this->allowCaching,'$this->allowCaching');
+		if ($this->allowCaching == 0) $GLOBALS["TSFE"]->set_no_cache();
 		else {
 			$this->mmlib_cache->init($this->allowCaching);
 			$this->pi_autoCacheEn = true;
@@ -1378,7 +1379,7 @@ class mmlib_extfrontend extends tslib_pibase
 				} 
 			}
 			
-			//debug($strIMG,1);
+			//t3lib_div::debug($strIMG,'$strIMG');
 			
 			$strContent .= ('<span' . $this->pi_classParam('image ' . $this->pi_getClassName('image-' . $nCounter)) . '>' .
 				$strIMG . '</span>');
@@ -1921,8 +1922,8 @@ class mmlib_extfrontend extends tslib_pibase
 			$linkImage										= $this->getImageFromIconset($imagenameBase,'iconset_navigation','/pi1/res/images/default/22x22/navigation/','alt="" title="' . $linkText . '"');
 			if($linkImage == '') $linkImage					= $imagenameBase . ' not found...';
 			
-			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP_keepPIvars($linkText,$arryLinks,$cache=1);	
-			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP_keepPIvars($linkImage,$arryLinks,$cache=1);	
+			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP_keepPIvars($linkText,$arryLinks,$this->allowCaching);	
+			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP_keepPIvars($linkImage,$arryLinks,$this->allowCaching);	
 			$markerArray['###SELECTOR_ELEMENT_CLASS###'] 	= ($rowNumber % 2 ? $this->pi_classParam("selector-element-odd selector-element-n" . $rowNumber) : $this->pi_classParam("selector-element-even selector-element-n" . $rowNumber)) ;
 			
 			$elements[] = $this->cObj->substituteMarkerArray($templateSEL,$markerArray);
@@ -1966,9 +1967,9 @@ class mmlib_extfrontend extends tslib_pibase
 			$linkText										= $this->pi_getLL($descritionEntry,$value);
 			$linkImage										= $this->getImageFromIconset($imagenameBase,'iconset_navigation','/pi1/res/images/default/22x22/navigation/','alt="" title="' . $linkText . '"');
 			if($linkImage == '') $linkImage					= $imagenameBase . ' not found...';
-			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP($linkImage,$arryLinks,$cache=1);	
+			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP($linkImage,$arryLinks,$this->allowCaching);	
 			
-			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP($linkText,$arryLinks,$cache=1);	
+			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP($linkText,$arryLinks,$this->allowCaching);	
 			$markerArray['###SELECTOR_ELEMENT_CLASS###'] 	= ($rowNumber % 2 ? $this->pi_classParam("selector-element-odd selector-element-n" . $rowNumber) : $this->pi_classParam("selector-element-even selector-element-n" . $rowNumber));
 			
 			$element = $this->cObj->substituteMarkerArray($templateSEL,$markerArray);
@@ -2034,15 +2035,16 @@ class mmlib_extfrontend extends tslib_pibase
 			$descritionEntry								= $nameLinkBase . '-modeselector-desc';
 			//t3lib_div::debug($descritionEntry,1);
 			
-			$linkText										= $this->pi_getLL($descritionEntry,htmlspecialchars($value));
+			$linkTextTemp									= $this->pi_getLL($descritionEntry,htmlspecialchars($value));
+			$linkText										= ($this->conf['replace_blank_in_modeselectors'] ? str_replace(' ','&nbsp;',$linkTextTemp) : $linkTextTemp);
 			$imagenameBase									= $nameLinkBase .'-modeselector.jpg';
 			$linkImage										= $this->getImageFromIconset($imagenameBase,'iconset_navigation','/pi1/res/images/default/22x22/navigation/','alt="" title="' . $linkText . '"');
 			if($linkImage == '') $linkImage					= $imagenameBase . ' not found...';
-			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP_keepPIvars($linkImage,$arryLinks,$cache=1);
+			$markerArray['###SELECTOR_ELEMENT_IMG###']		= $this->pi_linkTP_keepPIvars($linkImage,$arryLinks,$this->allowCaching);
 
 
 			$markerArray['###SELECTOR_ELEMENT_TEXT###']		= $linkText;
-			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP_keepPIvars($linkText,$arryLinks,$cache=1);
+			$markerArray['###SELECTOR_ELEMENT###'] 			= $this->pi_linkTP_keepPIvars($linkText,$arryLinks,$this->allowCaching);
 			$markerArray['###SELECTOR_ELEMENT_CLASS###'] 	= $this->pi_classParam('modeSelector-SCell modeSelector-SCell-n' . $itemNumber);
 
 			//t3lib_div::debug($arryLinks,'$arryLinks=');
@@ -2494,7 +2496,12 @@ class mmlib_extfrontend extends tslib_pibase
 			}
 	
 			// Adds the search box:
-			if($lConf['showSearchBox'] == 1) $content .= $this->pi_list_searchBox();
+			if($lConf['showSearchBox'] == 1) {
+				//t3lib_div::debug($this->conf,'conf');
+				if(isset($lConf['use_alternate_searchbox']) && $lConf['use_alternate_searchbox'] == 1) {
+					$content .= $this->alternateSearchBox();
+				} else $content .= $this->pi_list_searchBox(); 
+			}
 		
 		$content .= '</div>';
 		
@@ -3537,7 +3544,7 @@ class mmlib_extfrontend extends tslib_pibase
                $markerArray['###SELECTOR_ITEM_LINK###'] = $this->cObj->typoLink($value, $linkconf);			
 				//$markerArray['###SELECTOR_ITEM_LINK###'] 	= $this->pi_linkTP($value,$arryLinks,1,intval($targetpageid));
 			} else {
-				$markerArray['###SELECTOR_ITEM_LINK###'] 	= $this->pi_linkTP_keepPIvars($value,$arryLinks,1);
+				$markerArray['###SELECTOR_ITEM_LINK###'] 	= $this->pi_linkTP_keepPIvars($value,$arryLinks,$this->allowCaching);
 			}
 			
 			if(preg_match('#href="([^"]*)"#',$markerArray['###SELECTOR_ITEM_LINK###'],$match)) {
@@ -3563,7 +3570,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$arryLinksToRemove['filterfield'] 	= '';
 		$arryLinksToRemove['filterid'] 		= '';		
 		$markerArray['###FIRSTCOMBOENTRY###'] = $this->getLLabel($firstComboEntry,$firstComboEntry);
-		$markerArray['###FIRSTCOMBOENTRY_LINK###'] 	= $this->pi_linkTP_keepPIvars($markerArray['###FIRSTCOMBOENTRY###'],$arryLinksToRemove,1);
+		$markerArray['###FIRSTCOMBOENTRY_LINK###'] 	= $this->pi_linkTP_keepPIvars($markerArray['###FIRSTCOMBOENTRY###'],$arryLinksToRemove,$this->allowCaching);
 		if(preg_match('#href="([^"]*)"#',$markerArray['###FIRSTCOMBOENTRY_LINK###'],$match)) {
 			$markerArray['###FIRSTCOMBOENTRY_LINK_URL###'] = $match[1];
 		}
@@ -3592,6 +3599,47 @@ class mmlib_extfrontend extends tslib_pibase
 	
 	return createSubTableLinkWidgetFromArray($conf);
 	}
+	
+	/**
+	 * Creates an alternative Search-Box with CSS-Styles
+	 * 
+	 * Returns a Search box, sending search words to piVars "sword" and 
+	 * setting the "no_cache" parameter as well in the form. Submits the search request to the current REQUEST_URI
+	 * 
+	 * 
+	 * @param	[string]	$tableParams - Attributes for the table tag which is wrapped around the table cells containing the search box
+	 *  
+	 * @return	[string]	Output HTML, wrapped in ttags with a class attribute 
+	 * 
+	 */
+	function alternateSearchBox($divParams='')     {
+                         // Search box design:
+                         
+	
+		$content = '
+ 
+			<!-- List search box: -->
+			<div'.$this->pi_classParam('searchbox').'>
+				<form action="'.htmlspecialchars(t3lib_div::getIndpEnv('REQUEST_URI')).'" method="post" style="margin: 0 0 0 0;">
+					<'.trim('div '.$divParams).'>
+						<div ' . $this->pi_classParam('searchbox-label') . '>
+							' . $this->getLLabel('label.searchbox') . '
+						</div>
+						<div ' . $this->pi_classParam('searchbox-sword-container') . '>
+							<input type="text" name="'.$this->prefixId.'[sword]" value="'.htmlspecialchars($this->piVars['sword']).'"'.$this->pi_classParam('searchbox-sword').' />
+						</div>
+						<div ' . $this->pi_classParam('searchbox-button-container') . '>
+							<input type="submit" value="'.$this->pi_getLL('pi_list_searchBox_search','Search',TRUE).'"'.$this->pi_classParam('searchbox-button').' />'.
+							'<input type="hidden" name="no_cache" value="1" />'.
+							'<input type="hidden" name="'.$this->prefixId.'[pointer]" value="" />'.
+						'</div>
+					</div>
+				</form>
+			</div>';
+ 
+		return $content;
+        }
+	
          
 /*
  -------------	
