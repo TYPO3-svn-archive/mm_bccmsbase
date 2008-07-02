@@ -65,6 +65,7 @@ class mmlib_extfrontend extends tslib_pibase
 	var $local_cObj				= null;
 	var $mmlib_cache			= null;
 	var $_recurse 				= false;
+	var $_debug					= false;
 	
 	/**
 	 * Does the same as "initFromArray"
@@ -193,7 +194,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$this->initLanguage();
 
 		// Loads the current table record into the internal array $this->internal['currentRow']		
-		$this->initCurrentRow($this->piVars["showuid"]);
+		$this->initCurrentRow($this->piVars["showuid"] ? $this->piVars["showuid"] : $this->piVars["showUid"]);
 
 		// Removes old TempFiles from Cache
 		$this->_clearSecureCache(30);
@@ -446,12 +447,10 @@ class mmlib_extfrontend extends tslib_pibase
 	 */
 	function getDataFromForeignTable($UIDFieldInContentTable,$nameForeignTable,$fieldnameInForeignTable,$sort = true,$parentUID = -1)
 	{
-		$debug = 0;
-		//t3lib_div::debug($this->cObj->data,'$this->cObj->data');
-		//t3lib_div::debug($this->internal['currentRow'],'$this->internal[\'currentRow\']');
-		
-		//$result = $this->mmlib_cache->getResult('getDataFromForeignTable',array($UIDFieldInContentTable,$nameForeignTable,$fieldnameInForeignTable,$sort));
-		//if($result != null) return $result;
+		if($this->isDebug()) { 
+			t3lib_div::debug($this->cObj->data,'$this->cObj->data');
+			t3lib_div::debug($this->internal['currentRow'],'$this->internal[\'currentRow\']');
+		}
 		
 		// returns all entries
 		if($UIDFieldInContentTable == null) {
@@ -460,15 +459,24 @@ class mmlib_extfrontend extends tslib_pibase
 		// $this->cObj->data - data from the current tt_content-record
 		} else if(isset($this->cObj->data[$UIDFieldInContentTable])) {
 			$conf['uidInList'] = $this->cObj->data[$UIDFieldInContentTable];
+			if($this->isDebug()) { 
+				t3lib_div::debug($conf['uidInList'],'if(isset($this->cObj->data[$UIDFieldInContentTable]))');
+			}
 
 		// the current table record
 		} else if(isset($this->internal['currentRow'][$UIDFieldInContentTable])) {
 			$conf['uidInList'] = $this->internal['currentRow'][$UIDFieldInContentTable];
+			if($this->isDebug()) {
+				t3lib_div::debug($conf['uidInList'],'if(isset($this->internal[\'currentRow\'][$UIDFieldInContentTable]))');
+			}
 			
 		// Here it comes from the FlexForm
 		} else {
 			$flexInfo = explode(':',$UIDFieldInContentTable);
 			$conf['uidInList'] = $this->pi_getFFvalue($this->cObj->data['pi_flexform'], $flexInfo[1], $flexInfo[0]);
+			if($this->isDebug()) { 
+				t3lib_div::debug($conf['uidInList'],'else...');
+			}
 			//debug($this->cObj->data['pi_flexform']);
 		}
 
@@ -494,9 +502,10 @@ class mmlib_extfrontend extends tslib_pibase
 			$conf['orderBy'] = $this->getSortFieldFromTCA($nameForeignTable);
 		}
 		
+		if($this->isDebug()) t3lib_div::debug($conf,'$conf');
 		$SQLStatement = $this->cObj->getQuery($nameForeignTable,$conf);
 		$SQLStatement = str_replace('AND AND','AND',$SQLStatement);
-		if($debug) t3lib_div::debug($SQLStatement,$SQLStatement);
+		if($this->isDebug()) t3lib_div::debug($SQLStatement,'$SQLStatement');
 		
 		$result = $GLOBALS['TYPO3_DB']->sql_query($SQLStatement);
 		$tempListdata = array();
@@ -3641,7 +3650,15 @@ class mmlib_extfrontend extends tslib_pibase
 		return $content;
         }
 	
-         
+       function setDebug($debug = true) {
+       		$temp = $this->_debug;
+       		$this->_debug = $debug;
+       		return $temp;
+       }  
+       
+       function isDebug() {
+       		return ($this->_debug);
+       }
 /*
  -------------	
          function pi_linkTP($str,$urlParameters=array(),$cache=0,$altPageId=0)   {
