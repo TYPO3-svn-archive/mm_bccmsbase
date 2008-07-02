@@ -193,7 +193,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$this->initLanguage();
 
 		// Loads the current table record into the internal array $this->internal['currentRow']		
-		$this->initCurrentRow($this->piVars["showUid"]);
+		$this->initCurrentRow($this->piVars["showuid"]);
 
 		// Removes old TempFiles from Cache
 		$this->_clearSecureCache(30);
@@ -478,7 +478,8 @@ class mmlib_extfrontend extends tslib_pibase
 		if($parentUID != -1) $conf['pidInList'] = $parentUID;
 		
 		if($conf['pidInList'] == 0 && $conf['uidInList'] == 0) {
-			die('ATTENTION: uidInList AND pidInList is 0, so the QUERY must return 0 records...');
+			//t3lib_div::debug(debug_backtrace(),'var_dump');
+			die('ATTENTION: uidInList AND pidInList is 0, so the QUERY must return 0 records (getDataFromForeignTable)...');
 		}
 		
 		$conf['selectFields'] = $fieldnameInForeignTable . ',uid';
@@ -1547,7 +1548,7 @@ class mmlib_extfrontend extends tslib_pibase
 		
 		$singlePid = 0;
 		if(isset($this->conf['singlePid']) && $this->conf['singlePid'] != '') $singlePid = $this->conf['singlePid'];
-		
+
 		// The "1" means that the display of single items is CACHED! Set to zero to disable caching.	
 		$strLinkContent = $this->pi_list_linkSingle($strTextToShow,
 			$this->internal['currentRow']['uid'],
@@ -2355,9 +2356,9 @@ class mmlib_extfrontend extends tslib_pibase
 		$this->initInternalVars($this->getViewType());
 
 		// A single element should be displayed - change to singleView
-		if ($this->piVars['showUid'])
+		if ($this->piVars['showuid'])
 			{
-			$this->internal['currentRow'] = $this->initCurrentRow($this->piVars["showUid"]);
+			$this->internal['currentRow'] = $this->initCurrentRow($this->piVars["showuid"]);
 			
 			$content = $this->singleView($content);
 			return $content;
@@ -2862,8 +2863,8 @@ class mmlib_extfrontend extends tslib_pibase
 				$this->internal['currentRow']		=	$this->cObj->data;
 				$this->mmlib_cache->resetBuffer();
 				
-				if($this->piVars['showUid']) {
-					$this->internal['currentRow'] 	= $this->initCurrentRow($this->piVars["showUid"]);
+				if($this->piVars['showuid']) {
+					$this->internal['currentRow'] 	= $this->initCurrentRow($this->piVars["showuid"]);
 					}
 				
 				$content = $this->singleView($content);
@@ -3502,7 +3503,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$templateItem 		= $this->cObj->getSubpart($templateSelctor,'###SELECTOR_ITEM###');
 
 		// Overrule
-		$arryLinks['showUid']	= '';
+		$arryLinks['showuid']	= '';
 		$arryLinks['sword'] 	= '';
 		
 		$elements		= array();
@@ -3597,7 +3598,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$conf['linktarget'] 	= $linktarget;
 		$conf['targetpageid'] 	= $targetpageid;
 	
-	return createSubTableLinkWidgetFromArray($conf);
+	return $this->createSubTableLinkWidgetFromArray($conf);
 	}
 	
 	/**
