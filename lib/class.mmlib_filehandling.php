@@ -58,7 +58,7 @@ class mmlib_FileHandling {
 		$aTemp = array();
 		exec($fullZIPCommand,$aTemp,$returnValue);
 		if($returnValue != 0) {
-			//debug($returnValue);
+			t3lib_div::debug($fullZIPCommand,'$fullZIPCommand');
 			return false;
 		}
 		

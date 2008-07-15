@@ -157,7 +157,7 @@ global $TYPO3_CONF_VARS;
 			{
 			return;
 			}
-			
+
 		$filehandler = t3lib_div::makeInstance('mmlib_FileHandling');
 		
 		$uploadFolder 		= 'uploads/tx_mmdamfilelist/';
@@ -203,13 +203,13 @@ global $TYPO3_CONF_VARS;
 		
 		$fileToDownload = $copyResult;
 
-		
 		// isZIPFile only checks for the extension
 		$zipResult = null;
 		if($filehandler->isZIPFile($this->target) == true)
 			{
 			$zipResult = $filehandler->zipFile($copyResult);
 			if($zipResult == false) {
+				die("Could not ZIP the file, maybe the zip-Programm ist not installed. (must be /usr/bin/zip)");
 				return;
 			}
 			
@@ -222,7 +222,8 @@ global $TYPO3_CONF_VARS;
 			{
 			$this->writeLog('File downloaded',basename($fileToDownload),$logCategory);
 			//$filehandler->removeFile($fileToDownload);
-			}      		
+			}
+			
 		if($zipResult != null)	$filehandler->removeFile($zipResult);
 		}
 

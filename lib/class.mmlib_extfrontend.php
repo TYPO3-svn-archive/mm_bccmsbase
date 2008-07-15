@@ -115,6 +115,9 @@ class mmlib_extfrontend extends tslib_pibase
 			$this->internal['piVarsOnInit']		= $this->piVars;
 		} else $this->internal['piVarsOnInit']	= null;
 		
+		// Change keys to lowercase
+		$this->reformatPIVarsKey();
+		
 		// These extensions are images - prop. needed for the isImage-Function
 		$this->internal['image_extension'] = array('jpg','gif','png','jpeg','pdf');
 		
@@ -194,7 +197,7 @@ class mmlib_extfrontend extends tslib_pibase
 		$this->initLanguage();
 
 		// Loads the current table record into the internal array $this->internal['currentRow']		
-		$this->initCurrentRow($this->piVars["showuid"] ? $this->piVars["showuid"] : $this->piVars["showUid"]);
+		$this->initCurrentRow($this->piVars["showuid"] ? $this->piVars["showuid"] : $this->piVars["showuid"]);
 
 		// Removes old TempFiles from Cache
 		$this->_clearSecureCache(30);
@@ -755,7 +758,7 @@ class mmlib_extfrontend extends tslib_pibase
 		}
 	
 		// - old version. Overruling was not possible
-		//$this->internal['currentRow'] 	= $this->pi_getRecord($this->getTableName(),$showUID);
+		//$this->internal['currentRow'] 	= $this->pi_getRecord($this->getTableName(),$showUid);
 		
 		// now 28.2.08 - we overrule...
 		$this->internal['currentRow'] = $this->checkRecordOverruleFields($this->getTableName(),$showUID,0,$where);
@@ -3659,6 +3662,18 @@ class mmlib_extfrontend extends tslib_pibase
        function isDebug() {
        		return ($this->_debug);
        }
+    /*
+	 * Reformats the PIVar-Keys to LowerCase
+	 * 
+	 * @return	[void]	 
+     *      
+     */  
+	function reformatPIVarsKey() {
+			foreach($this->piVars as $key => $value) {
+				$this->piVars[strtolower($key)] = $value;
+			}
+	
+	}
 /*
  -------------	
          function pi_linkTP($str,$urlParameters=array(),$cache=0,$altPageId=0)   {
